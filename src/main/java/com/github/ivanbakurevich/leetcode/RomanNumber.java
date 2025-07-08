@@ -6,13 +6,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 
 /**
- * Leetcode problem <a href="https://leetcode.com/problems/roman-to-integer">link</a>
+ * Solution to <a href="https://leetcode.com/problems/roman-to-integer">...</a>
  */
 public class RomanNumber {
-
-    public static void main(String[] args) {
-        romanToInt("MCMXCIV");
-    }
 
     private static final Logger log = LoggerFactory.getLogger(RomanNumber.class);
 
