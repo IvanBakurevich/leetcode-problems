@@ -3,8 +3,9 @@ package com.github.ivanbakurevich.leetcode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 
 public class AlgorithmProblems {
 
@@ -99,18 +100,18 @@ public class AlgorithmProblems {
      */
     public static int pivotIndex(int[] nums) {
         long sum = 0L;
-        for(int i=0;i<nums.length;i++){
-            sum+=nums[i];
+        for (int i = 0; i < nums.length; i++) {
+            sum += nums[i];
         }
         long rightSum = sum;
         long leftSum = 0L;
 
-        for(int i=0;i<nums.length;i++) {
+        for (int i = 0; i < nums.length; i++) {
             rightSum -= nums[i];
-            if(leftSum == rightSum) {
+            if (leftSum == rightSum) {
                 return i;
             }
-            leftSum+=nums[i];
+            leftSum += nums[i];
         }
 
         return -1;
@@ -121,9 +122,9 @@ public class AlgorithmProblems {
      */
     public static String longestCommonPrefix(String[] strs) {
         String currentString = strs[0];
-        for(int i=1;i<strs.length;i++) {
+        for (int i = 1; i < strs.length; i++) {
             currentString = findCommon(currentString, strs[i]);
-            if(currentString.isEmpty()){
+            if (currentString.isEmpty()) {
                 break;
             }
         }
@@ -139,6 +140,225 @@ public class AlgorithmProblems {
         }
 
         return str1.substring(0, index);
+    }
+
+    public static int majorityElement(int[] nums) {
+        int majorityCount = nums.length / 2;
+        Map<Integer, Integer> numsCount = new HashMap<>();
+        for (int el : nums) {
+            Integer countValue = numsCount.merge(el, 1, Integer::sum);
+            if (countValue > majorityCount) {
+                return el;
+            }
+        }
+        throw new IllegalArgumentException("No majority element found");
+    }
+
+    public static boolean isValidSudoku(char[][] board) {
+        Set<String> existenElements = new HashSet<>();
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[0].length; j++) {
+                if (board[i][j] != '.') {
+                    String elementRow = "r" + i + board[i][j];
+                    String elementCol = "c" + j + board[i][j];
+                    String elementBox = "b" + i / 3 + j / 3 + board[i][j];
+                    if (!existenElements.add(elementRow) || !existenElements.add(elementCol) || !existenElements.add(elementBox)) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    public static boolean canConstruct(String ransomNote, String magazine) {
+        Map<Character, Integer> symbols = new HashMap<>();
+        for (int i = 0; i < magazine.length(); i++) {
+            symbols.merge(magazine.charAt(i), 1, Integer::sum);
+        }
+
+        for (int i = 0; i < ransomNote.length(); i++) {
+            var symbol = ransomNote.charAt(i);
+            var res = symbols.computeIfPresent(symbol, (key, oldValue) -> oldValue - 1);
+            if (res == null || res < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean isIsomorphic(String s, String t) {
+        if (s.length() != t.length()) {
+            return false;
+        }
+
+        Map<Character, Character> symbolMapping = new HashMap<>();
+        for (int i = 0; i < s.length(); i++) {
+            var symbol = s.charAt(i);
+            var expectedSymbol = t.charAt(i);
+            var prev = symbolMapping.put(symbol, expectedSymbol);
+            if (prev != null && prev != expectedSymbol) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean wordPattern(String pattern, String text) {
+        var words = text.split(" ");
+        var chars = pattern.toCharArray();
+        if (chars.length != words.length) {
+            return false;
+        }
+
+        Map<Character, String> patternWordMapping = new HashMap<>();
+        for (int i = 0; i < chars.length; i++) {
+            var prev = patternWordMapping.put(chars[i], words[i]);
+            if (prev != null && !prev.equals(words[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static List<List<String>> groupAnagrams(String[] strs) {
+        Map<String, List<String>> anagramMapping = new HashMap<>();
+        for (String word : strs) {
+            char[] charArray = word.toCharArray();
+            Arrays.sort(charArray);
+            String sortedWord = new String(charArray);
+            if (!anagramMapping.containsKey(sortedWord)) {
+                anagramMapping.put(sortedWord, new ArrayList<>());
+            }
+            anagramMapping.get(sortedWord).add(word);
+        }
+        return new ArrayList<>(anagramMapping.values());
+    }
+
+    public static boolean isAnagram(String s, String t) {
+        Map<Character, Integer> charCounter = new HashMap<>();
+
+        if (s.length() != t.length()) {
+            return false;
+        }
+        for (char ch : s.toCharArray()) {
+            charCounter.merge(ch, 1, Integer::sum);
+        }
+
+        for (char ch : t.toCharArray()) {
+            var res = charCounter.computeIfPresent(ch, (k, v) -> v - 1);
+            if (res == null || res < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean isHappy(int number) {
+        Set<Integer> visited = new HashSet<>();
+        visited.add(number);
+
+        while (true) {
+            number = process(number);
+            if (number == 1) {
+                return true;
+            }
+            if (visited.contains(number)) {
+                return false;
+            }
+            visited.add(number);
+        }
+    }
+
+    private static int process(int number) {
+        int result = 0;
+        log.info("Process: {}", number);
+        log.info("Result before: {}", result);
+        while (number > 0) {
+            result += (number % 10) * (number % 10);
+            number = number / 10;
+        }
+        log.info("Result after: {}", result);
+        return result;
+    }
+
+    public static String convertDateToBinary(String date) {
+        String splitter = "-";
+        var words = date.split(splitter);
+        java.util.StringJoiner joiner = new java.util.StringJoiner(splitter);
+        for (String word : words) {
+            joiner.add(toBinary(word));
+        }
+        return joiner.toString();
+    }
+
+    private static String toBinary(String decimalStr) {
+        int decimal = Integer.parseInt(decimalStr);
+        StringBuilder builder = new StringBuilder();
+
+        while (decimal != 0) {
+            builder.insert(0, decimal % 2);
+            decimal = decimal / 2;
+        }
+        return builder.toString();
+    }
+
+    private static final Set<Character> vowels = Set.of(
+            'a', 'e', 'i', 'o', 'u', 'A', 'E', 'I', 'O', 'U'
+    );
+
+    public static boolean isValid(String word) {
+        int requiredLength = 3;
+        boolean hasConsonant = false;
+        boolean hasVowel = false;
+        Predicate<Character> isEnglishLetter = ch -> (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+        Predicate<Character> isDigit = ch -> (ch >= '0' && ch <= '9');
+        Predicate<Character> isValidSymbol = isEnglishLetter.or(isDigit);
+        Predicate<Character> isVowel = vowels::contains;
+        Predicate<Character> isConsonant = isEnglishLetter.and(Predicate.not(isVowel));
+
+        if (word.length() < requiredLength) {
+            return false;
+        }
+
+        for (char ch : word.toCharArray()) {
+            if (!isValidSymbol.test(ch)) {
+                return false;
+            }
+            if (!hasConsonant) {
+                hasConsonant = isConsonant.test(ch);
+            }
+            if (!hasVowel) {
+                hasVowel = isVowel.test(ch);
+            }
+        }
+        return hasConsonant && hasVowel;
+    }
+
+    /**
+     * Solution to <a href="https://leetcode.com/problems/reverse-integer/">...</a>
+     */
+    public static int reverse(int number) {
+
+        int result = 0;
+        int digit;
+        int max = Integer.MAX_VALUE;
+        int min = Integer.MIN_VALUE;
+        BiPredicate<Integer, Integer> maxOverflow = (num, lastDigitToAdd) ->
+                num > max / 10 || (num == max / 10 && lastDigitToAdd > max % 10);
+        BiPredicate<Integer, Integer> minOverflow = (num, lastDigitToAdd) ->
+                num < min / 10 || (num == min / 10 && lastDigitToAdd < min % 10);
+        while (number != 0) {
+            digit = number % 10;
+
+            if (maxOverflow.test(result, digit) || minOverflow.test(result, digit)) {
+                return 0;
+            }
+            result = result * 10 + digit;
+            number = number / 10;
+        }
+
+        return result;
     }
 
     /**
